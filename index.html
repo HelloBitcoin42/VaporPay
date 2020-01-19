@@ -1,0 +1,49 @@
+<?php 
+session_start();
+if(!isset($_SESSION['val'])){
+  exec("gpio -g mode 18 pwm && gpio pwm-ms && gpio pwmc 192 && gpio pwmr 2000");
+}
+function inicio(){
+	exec('gpio -g pwm 18 240');
+	}
+inicio();
+?>
+<html>
+
+<!-- <a href="2.php">Test</a>  -->
+	
+<img src="https://chart.googleapis.com/chart?chs=250x250&cht=qr&chl=14nPFtooKeDG7B4SrBKrKnAX8mHeVWY9FB">
+<br>
+14nPFtooKeDG7B4SrBKrKnAX8mHeVWY9FB
+<br>
+Cost of Vapor: .0001 BTC / Minute
+<div id="websocket">Monitoring 14nPFtooKeDG7B4SrBKrKnAX8mHeVWY9FB...</div>
+
+<script>
+var btcs = new WebSocket("wss://ws.blockchain.info/inv");
+btcs.onopen = function (){
+	btcs.send(JSON.stringify({"op":"addr_sub", "addr":"14nPFtooKeDG7B4SrBKrKnAX8mHeVWY9FB"}));
+};
+btcs.onmessage = function (onmsg){
+	var response =JSON.parse(onmsg.data);
+	console.log(response);
+	var getOuts = response.x.out;
+	var countOuts = getOuts.length;
+	
+	for(i=0; i<countOuts; i++){
+		var outAdd = response.x.out[i].addr;
+		var address = "14nPFtooKeDG7B4SrBKrKnAX8mHeVWY9FB";
+		if(outAdd == address){
+			var amount = response.x.out[i].value;
+			var calAmount = amount / 100000000;
+			var time = calAmount / .0001;
+			document.getElementById("websocket").innerHTML = "Recebido: "+ calAmount+"BTC.  Vapor will work for: "+time+" minutes.";
+			$setmode17 = shell_exec("/usr/local/bin/gpio -g mode 17 out");
+			$gpio_on = shell_exec("/usr/local/bin/gpio -g write 17 1");
+			sleep(time*60);
+			$gpio_off = shell_exec("/usr/local/bin/gpio -g write 17 0");
+		};
+	};
+};
+</script>
+</html>
